@@ -3,6 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:oxenfarmassign/Screens/showPickedCompanies.dart';
+import 'package:oxenfarmassign/changeNotifier.dart';
+import 'package:oxenfarmassign/constants.dart';
+import 'package:provider/provider.dart';
 
 class ShowWatchlist extends StatefulWidget {
   static const String id = 'show_WatchList';
@@ -12,27 +15,19 @@ class ShowWatchlist extends StatefulWidget {
 }
 
 class _ShowWatchlistState extends State<ShowWatchlist> {
-  final String _baseUrl = 'https://api.stocktwits.com/api/2/watchlists.json';
+  String _baseUrl = kWatchlistUrl;
+  late String token;
 
-  // Add the id of the watchlist whose company list we want to show
-  final String _token = '5ed70ea1a0565456ce28008d086fbf6bf4655bd7';
-  late Future data;
-
-  @override
-  void initState() {
-    super.initState();
-    data = getData();
-  }
-
-  Future getData() async {
+  Future getData(String token) async {
     Future data;
-    String url = '$_baseUrl?access_token=$_token';
+    String url = '$_baseUrl?access_token=$token';
     Watchlist watchlist = Watchlist(url);
     data = watchlist.fetchWatchList();
     return data;
   }
 
   Widget createList(List data, BuildContext context) {
+    Provider.of<AppData>(context).appData['myWatchlistId'] = data[0]['id'].toString();
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -64,9 +59,10 @@ class _ShowWatchlistState extends State<ShowWatchlist> {
 
   @override
   Widget build(BuildContext context) {
+    token = Provider.of<AppData>(context).appData['myToken'].toString();
     return Scaffold(
       appBar: AppBar(
-        title: Text('WatchList'),
+        title: Text('WatchLists'),
       ),
       body: Padding(
         padding: const EdgeInsets.only(top: 20.0),
@@ -75,7 +71,7 @@ class _ShowWatchlistState extends State<ShowWatchlist> {
           children: <Widget>[
             Container(
               child: FutureBuilder(
-                  future: data,
+                  future: getData(token),
                   builder: (context, AsyncSnapshot snapshot) {
                     return snapshot.hasData
                         ? createList(snapshot.data['watchlists'], context)

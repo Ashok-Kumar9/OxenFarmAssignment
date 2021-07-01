@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:oxenfarmassign/constants.dart';
+import 'package:provider/provider.dart';
+
+import '../changeNotifier.dart';
 
 class ShowPickedCompanies extends StatefulWidget {
   static const String id = 'showPickedCompanies';
@@ -11,24 +15,14 @@ class ShowPickedCompanies extends StatefulWidget {
 }
 
 class _ShowPickedCompaniesState extends State<ShowPickedCompanies> {
-  final String _baseUrl = 'https://api.stocktwits.com/api/2/watchlists/show/';
-  //Add the token here
-  final String _token = '5ed70ea1a0565456ce28008d086fbf6bf4655bd7';
-  // Add the id of the watchlist whose company list we want to show
-  final String _watchlistId = '4701439';
-
-  late Future data;
-
-  @override
-  void initState() {
-    super.initState();
-    data = showPickedComp();
-  }
+  final String _baseUrl = kShowWatchlistUrl;
+  late String token;
+  late final String _watchlistId;
 
   // for getting the data of companies picked in the watchlist
   Future showPickedComp() async {
     Future data;
-    String url = '$_baseUrl$_watchlistId.json?access_token=$_token';
+    String url = '$_baseUrl$_watchlistId.json?access_token=$token';
     CompanyList watchlist = CompanyList(url);
     data = watchlist.fetchWatchList();
     return data;
@@ -68,6 +62,9 @@ class _ShowPickedCompaniesState extends State<ShowPickedCompanies> {
 
   @override
   Widget build(BuildContext context) {
+    token = Provider.of<AppData>(context).appData['myToken'].toString();
+    _watchlistId =
+        Provider.of<AppData>(context).appData['myWatchlistId'].toString();
     return Scaffold(
       appBar: AppBar(
         title: Text('Companies Picked'),
@@ -75,7 +72,7 @@ class _ShowPickedCompaniesState extends State<ShowPickedCompanies> {
       body: Center(
         child: Container(
           child: FutureBuilder(
-            future: data,
+            future: showPickedComp(),
             builder: (context, AsyncSnapshot snapshot) {
               if (snapshot.hasData) {
                 return createList(
